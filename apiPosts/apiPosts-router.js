@@ -39,7 +39,7 @@ router.get("/:id", (req, res) => {
 // GET | /api/posts/:id/comments | Returns an array of all the comment objects associated with the post with the specified id.   
 router.get("/:id/comments", (req, res) => {
     const { id } = req.params
-    posts.findCommentById(id)
+    posts.findPostComments(id)
     .then(comments => {
         if(comments) {
             res.status(200).json(comments)
@@ -88,7 +88,7 @@ router.put("/:id", (req, res) => {
 
 //POST | /api/posts | Creates a post using the information sent inside the `request body`.  
 router.post("/", (req, res) => {
-    posts.add(req.body)
+    posts.insert(req.body)
     .then(post => {
         res.status(201).json(post)
     })
