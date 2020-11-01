@@ -4,6 +4,9 @@ const express = require("express")
 const router = express.Router()
 const posts = require("../data/db.js")
 
+
+
+// GET | /api/posts | Returns an array of all the post objects contained in the database.   
 router.get("/", (req, res) => {
     posts.find(req.query)
     .then(post => {
@@ -17,116 +20,95 @@ router.get("/", (req, res) => {
     })
 })
 
+// GET | /api/posts/:id | Returns the post object with the specified id.  
+router.get("/:id", (req, res) => {
+    posts.findById(req.params.id)
+    .then(post => {
+        if(post) {
+            res.status(200).json(post)
+        } else {
+            res.status(404).json({ message: "post not found" })
+        }
+    })
+    .catch(error => {
+        console.log("Error with router GET ID ", error)
+        res.status(500).json({ message: "Error retrieving the specified id post" })
+    })
+})
+
+// GET | /api/posts/:id/comments | Returns an array of all the comment objects associated with the post with the specified id.   
+router.get("/:id/comments", (req, res) => {
+    const { id } = req.params
+    posts.findCommentById(id)
+    .then(comments => {
+        if(comments) {
+            res.status(200).json(comments)
+        } else {
+            res.status(404).json({ message: "Specified id comments not found" })
+        }
+    })
+    .catch(error => {
+        console.log("Error router GET id comments ", error)
+        res.status(500).json({ message: "Database error retrieving the specified id comments" })
+    })
+})
+
+// DELETE | /api/posts/:id | Removes the post with the specified id and returns the **deleted post object**. You may need to make additional calls to the database in order to satisfy this requirement.
+router.delete("/:id", (req, res) => {
+    posts.remove(req.params.id)
+    .then(count => {
+        if(count > 0) {
+            res.status(200).json(count)
+        } else {
+            res.status(404).json({ message: "The specified id post has been deleted" })
+        }
+    })
+    .catch(error => {
+        console.log("Error router DELETE ", error)
+        res.status(500).json({ message: "Error deleting the specified id post" })
+    })
+})
+
+//PUT | /api/posts/:id | Updates the post with the specified `id` using data from the `request body`. Returns the modified document, **NOT the original**.  
+router.put("/:id", (req, res) => {
+    const changes = req.body
+    posts.update(req.params.id, changes)
+    .then(post => {
+        if(post) {
+            res.status(200).json(post)
+        } else {
+            res.status(404).json({ message: "The specified id post could not be found" })
+        }
+    })
+    .catch(error => {
+        console.log("Error router PUT ", error)
+        res.status(500).json({ message: "Error updating the specified id post" })
+    })
+})
+
+//POST | /api/posts | Creates a post using the information sent inside the `request body`.  
+router.post("/", (req, res) => {
+    posts.add(req.body)
+    .then(post => {
+        res.status(201).json(post)
+    })
+    .catch(error => {
+        console.log("Error router POST ", error)
+        res.status(500).json({ message: "Error adding the post" })
+    })
+})
+
+//POST | /api/posts/:id/comments | Creates a comment for the post with the specified id using information sent inside of the `request body`. 
+router.post("/:id/comments", async (req, res) => {
+    const newComment = {...req.body, post_id: req.params.id}
+    try {
+        const comment = await posts.insertComment(newComment)
+        res.status(201).json(comment)
+    } catch(error) {
+        console.log("Error router POST id comment ", error)
+        res.status(500).json({ error }) //WHEN DO YOU JUST WRITE 'error' and when do you write a message as above router request?
+    }
+})
+
 module.exports = router
-
-// const express = require("express")
-// const router = express.Router()
-// const Hubs = require('./hubs-model.js');
-
-// router.get('/', (req, res) => {
-//     Hubs.find(req.query)
-//     .then(hubs => {
-//       res.status(200).json(hubs);
-//     })
-//     .catch(error => {
-//       // log error to database
-//       console.log(error);
-//       res.status(500).json({
-//         message: 'Error retrieving the hubs',
-//       });
-//     });
-//   });
   
-//   router.get('/:id', (req, res) => {
-//     Hubs.findById(req.params.id)
-//     .then(hub => {
-//       if (hub) {
-//         res.status(200).json(hub);
-//       } else {
-//         res.status(404).json({ message: 'Hub not found' });
-//       }
-//     })
-//     .catch(error => {
-//       // log error to database
-//       console.log(error);
-//       res.status(500).json({
-//         message: 'Error retrieving the hub',
-//       });
-//     });
-//   });
-
-//   router.get("/:id/messages", (req, res) => {
-//       const { id } = req.params
-
-//       Hubs.findHubMessages(id)
-//       .then(messages => {
-//           if(messages) {
-//               res.status(200).json(messages)
-//           } else {
-//               res.status(404).json({ message: "Id not found" })
-//           }
-//       })
-//       .catch(err => {
-//           console.log(err)
-//           res.status(500).json({ message: "db error retrieving hub" })
-//       })
-//   })
-
-//   // See NOTES after lecture as not enough time
-// //   router.post("/:id/messages", (req, res) => {
-// //       const { id } = req.params
-// //   })
-  
-//   router.post('/', (req, res) => {
-//     Hubs.add(req.body)
-//     .then(hub => {
-//       res.status(201).json(hub);
-//     })
-//     .catch(error => {
-//       // log error to database
-//       console.log(error);
-//       res.status(500).json({
-//         message: 'Error adding the hub',
-//       });
-//     });
-//   });
-  
-//   router.delete('/:id', (req, res) => {
-//     Hubs.remove(req.params.id)
-//     .then(count => {
-//       if (count > 0) {
-//         res.status(200).json({ message: 'The hub has been nuked' });
-//       } else {
-//         res.status(404).json({ message: 'The hub could not be found' });
-//       }
-//     })
-//     .catch(error => {
-//       // log error to database
-//       console.log(error);
-//       res.status(500).json({
-//         message: 'Error removing the hub',
-//       });
-//     });
-//   });
-  
-//   router.put('/:id', (req, res) => {
-//     const changes = req.body;
-//     Hubs.update(req.params.id, changes)
-//     .then(hub => {
-//       if (hub) {
-//         res.status(200).json(hub);
-//       } else {
-//         res.status(404).json({ message: 'The hub could not be found' });
-//       }
-//     })
-//     .catch(error => {
-//       // log error to database
-//       console.log(error);
-//       res.status(500).json({
-//         message: 'Error updating the hub',
-//       });
-//     });
-//   });
-
-
-// module.exports = router
