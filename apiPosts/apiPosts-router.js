@@ -91,7 +91,7 @@ router.put("/:id", (req, res) => {
 //POST | /api/posts | Creates a post using the information sent inside the `request body`.  
 router.post("/", (req, res) => {
     const postBody = req.body
-    if(postBody.title === "" || postBody.contents === "") {
+    if(!postBody.title || !postBody.contents) {
         res.status(400).json({ errorMessage: "Please provide title and contents for the post." })
     } else {
         posts.insert(req.body)
@@ -113,7 +113,7 @@ router.post("/:id/comments", async (req, res) => {
    
     if(!commentId) {
         res.status(404).json({vmessage: "The post with the specified ID does not exist." }) //Does these IF specs need to be inside the Try Catch? Do I need to add any await/async-await? 
-    } else if(commentBody.text === "") {
+    } else if(!commentBody.text) {
         res.status(400).json({ errorMessage: "Please provide text for the comment." })
     }
 
